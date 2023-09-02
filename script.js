@@ -536,7 +536,6 @@ ffmpeg.setLogger(({ type, message }) => { // Set an event every time there's an 
     consoleText += `<br>[${type}] ${message}`;
     if (`[${type}] ${message}`.startsWith("[fferr] OOM")) setTimeout(() => {
         createAlert("The ffmpeg process has reported an Out of memory error, and it'll be closed. If you are using multiple timestamp cut, you need to delete the timestamps ffmpeg-web has converted.", "ffmpegWeb-OutOfMemory");
-        resetFfmpeg()
     }, 400);
     if (consoleText.length > parseInt(document.getElementById("maxCharacters").value)) consoleText = consoleText.substring(consoleText.length - Math.floor(parseInt(document.getElementById("maxCharacters").value) * 9 / 10));
     if (progressMove) {
