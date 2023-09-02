@@ -534,7 +534,10 @@ let progressMove = true;
 let consoleText = "";
 ffmpeg.setLogger(({ type, message }) => { // Set an event every time there's an update from ffmpeg.wasm: add the message to the progress div
     consoleText += `<br>[${type}] ${message}`;
-    if (`[${type}] ${message}`.startsWith("[fferr] OOM") && confirm("The ffmpeg process has reported an Out of memory error. Do you want to close it? Remember that, if you are using multiple timestamp cut, you'll need to delete the timestamps ffmpeg-web has converted.")) resetFfmpeg();
+    if (`[${type}] ${message}`.startsWith("[fferr] OOM")) setTimeout(() => {
+        createAlert("The ffmpeg process has reported an Out of memory error, and it'll be closed. If you are using multiple timestamp cut, you need to delete the timestamps ffmpeg-web has converted.", "ffmpegWeb-OutOfMemory");
+        resetFfmpeg()
+    }, 400);
     if (consoleText.length > parseInt(document.getElementById("maxCharacters").value)) consoleText = consoleText.substring(consoleText.length - Math.floor(parseInt(document.getElementById("maxCharacters").value) * 9 / 10));
     if (progressMove) {
         document.getElementById("console").innerHTML = consoleText;
