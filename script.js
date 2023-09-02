@@ -31,7 +31,8 @@ let englishTranslations = {
         visibleAlerts: "All the alerts are now visible",
         ffmpegWait: "Wait until ffmpeg is loaded",
         allAlbum: "All the album arts are exported",
-        conversionEnded: "Executed conversion of all selected files :D"
+        conversionEnded: "Executed conversion of all selected files :D",
+        oom: "The ffmpeg process has reported an Out of memory error. Please refresh the webpage and restart the operation. If you are using the \"Multiple timestamp\" cut, add again only the missing files."
     }
 }
 let currentTranslation = englishTranslations;
@@ -238,7 +239,6 @@ function intelligentTime(timeArray) {
         if (splitArray.length === 1) splitArray.unshift("00", "00"); else if (splitArray.length === 2) splitArray.unshift("00");
         timeArray[i] = splitArray.join(":");     
     }
-    console.warn(timeArray);
     return timeArray;
 }
 async function ffmpegStart(skipImport) { // The function that manages most of the ffmpeg conversions
@@ -290,6 +290,7 @@ async function ffmpegStart(skipImport) { // The function that manages most of th
         tempOptions.ffmpegArray.splice(tempOptions.ffmpegArray.lastIndexOf("-ss"), tempOptions.ffmpegArray.length);
         try {
             if (document.getElementById("quitFfmpegTimestamp").checked) await resetFfmpeg();
+            for (let file of [`a${conversionOptions.output.name}.${tempOptions.fileExtension}`, `aa${conversionOptions.output.name}.${tempOptions.fileExtension}`]) try { await ffmpeg.FS('unlink', file); } catch (ex) { console.warn(ex) }; // Delete the files from the ffmpeg file system
             await ffmpegStart(!document.getElementById("quitFfmpegTimestamp").checked);
         } catch (ex) {
             console.warn(ex);
@@ -536,7 +537,7 @@ let consoleText = "";
 ffmpeg.setLogger(({ type, message }) => { // Set an event every time there's an update from ffmpeg.wasm: add the message to the progress div
     consoleText += `<br>[${type}] ${message}`;
     if (`[${type}] ${message}`.startsWith("[fferr] OOM")) setTimeout(() => {
-        alert("The ffmpeg process has reported an Out of memory error, and it must be closed (Settings -> RAM Management). If you are using multiple timestamp cut, you need to delete the timestamps ffmpeg-web has converted.");
+        alert(currentTranslation.js.oom);
         document.getElementById("trackStart").value = conversionOptions.output.dividerProgression - 1;
     }, 400);
     if (consoleText.length > parseInt(document.getElementById("maxCharacters").value)) consoleText = consoleText.substring(consoleText.length - Math.floor(parseInt(document.getElementById("maxCharacters").value) * 9 / 10));
