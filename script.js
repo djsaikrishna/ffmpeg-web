@@ -996,7 +996,7 @@ function loadFfmpeg(skipInfo) {
     return new Promise((resolve) => {
 if (!skipInfo) createAlert(currentTranslation.js.ffmpegLoad, "ffmpegLoading"); // Wait until ffmpeg-web loads the ffmpeg.wasm core component.
 document.getElementById("btnSelect").classList.add("disabled"); // Disable the "Select file" button until it has loaded
-if (!ffmpeg.isLoaded() || skipInfo) ffmpeg.load().then(() => {
+if (!ffmpeg.isLoaded()) ffmpeg.load().then(() => {
     // ffmpeg is loaded, so the "File select" button can now be clicked
     if (!skipInfo) createAlert(currentTranslation.js.successful, "ffmpegSuccessful");
     document.getElementById("btnSelect").classList.remove("disabled");
@@ -1009,6 +1009,7 @@ if (!ffmpeg.isLoaded() || skipInfo) ffmpeg.load().then(() => {
 }
 loadFfmpeg();
 async function resetFfmpeg() {
+    ffmpeg = createFFmpeg({ log: false, corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js' });
     await loadFfmpeg(true);
 }
 // Set up PWA installation prompt: catch the popup and display it when the user clicks the "Install as PWA" button
