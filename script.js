@@ -1009,7 +1009,8 @@ if (!ffmpeg.isLoaded()) ffmpeg.load().then(() => {
 }
 loadFfmpeg();
 async function resetFfmpeg() {
-    ffmpeg = createFFmpeg({ log: false, corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js' });
+    for (let file of tempOptions.deleteFile) try { await ffmpeg.FS('unlink', file); } catch (ex) { console.warn(ex) }; // Delete the files from the ffmpeg file system
+    ffmpeg.exit();
     await loadFfmpeg(true);
 }
 // Set up PWA installation prompt: catch the popup and display it when the user clicks the "Install as PWA" button
