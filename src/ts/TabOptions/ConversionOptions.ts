@@ -124,6 +124,14 @@ let ConversionOptions = {
          * If enabled, the single-threaded version of FFmpeg WebAssembly should be used if available (so, if 0.12.x is being loaded)
          */
         useSingleThreadedIfAvailable: false
+    },
+    imageToVideo: {
+        fps: 30,
+        force1FpsVideo: false,
+        autoWidth: true,
+        width: 1920,
+        height: 1080,
+        shouldFill: false
     }
 };
 if (localStorage.getItem("ffmpegWeb-SavePreferences") !== "a") {
