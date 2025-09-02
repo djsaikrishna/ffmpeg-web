@@ -149,7 +149,11 @@
                 >{getLang("Choose output directory")}</button
             >
         {:else}
-            <button on:click={filePicker}
+            <button on:click={(e) => {
+                document.body.style.setProperty("--positionX", `${e.clientX}px`);
+                document.body.style.setProperty("--positionY", `${e.clientY}px`);
+                filePicker();
+            }}
                 >{getLang(
                     `Choose a ${ConversionOptions.folderSelect ? "folder" : "file"}`,
                 )}</button

@@ -66,6 +66,9 @@
                 albumToVideoBackground.img = undefined;
             }}
         ></Switch><br />
+        <Switch text={getLang("Embed the album art also to the output video")} checked={ConversionOptions.audioToVideo.addAlbumArtToOutput} on:change={({detail}) => {
+            ConversionOptions.audioToVideo.addAlbumArtToOutput = detail;
+        }}></Switch><br>
         <label class="flex hcenter" style="gap: 10px">
             {getLang("Scale")}:
             <input
@@ -167,5 +170,6 @@
             }}
             checked={ConversionOptions.audioToVideo.restorePTS}
         ></Switch><br />
+        <Switch text={getLang("If the output file is an MP4 video, add also non-standard metadata")} on:change={({detail}) => {ConversionOptions.audioToVideo.addNonStandardMp4Tags = detail}} checked={ConversionOptions.audioToVideo.addNonStandardMp4Tags}></Switch><br>
     </Card>
 </Dialog>

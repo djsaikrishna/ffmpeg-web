@@ -99,6 +99,11 @@ let ConversionOptions = {
              */
             showImportedImage: false
         },
+        /**
+         * Add the extracted album art to the output video
+         */
+        addAlbumArtToOutput: true,
+        addNonStandardMp4Tags: false,
         scale: 2,
         /**
          * Save temporary images on device

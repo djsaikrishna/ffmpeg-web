@@ -51,7 +51,11 @@
         </Card>
     </div>
     <br />
-    <button on:click={showExtraDialog}
+    <button on:click={(e) => {
+        document.body.style.setProperty("--positionX", `${e.clientX}px`);
+        document.body.style.setProperty("--positionY", `${e.clientY}px`);
+        showExtraDialog();
+    }}
         >{getLang("Show advanced settings")}</button
     >
 </Card>

@@ -285,7 +285,9 @@ let translations = new Map<string, TranslationRequirements>([
     ["Output width", {it: "Larghezza di destinazione"}],
     ["Output height", {it: "Altezza di destinazione"}],
     ["Scale images if they have a different aspect ratio. If disabled, black bars will be added to preserve the image.", {it: "Scala le immagini se hanno un aspect ratio differente. Se disabilitato, delle bande nere verranno aggiunte per preservare l'immagine."}],
-    ["Merge images in a video", {it: "Unisci immagini in un video"}]
+    ["Merge images in a video", {it: "Unisci immagini in un video"}],
+    ["Embed the album art also to the output video", {it: "Incorpora la copertina dell'album anche sul video di destinazione"}],
+    ["If the output file is an MP4 video, add also non-standard metadata", {it: "Se il video di destinazione è un MP4, aggiungi anche i metadati non-standard"}]
 ])
 /**
  * Translate a string

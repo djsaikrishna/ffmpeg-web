@@ -11,6 +11,22 @@
         <AdaptiveAsset asset="icon" width={128}></AdaptiveAsset>
     </div>
     <Card type={1} forceColor={true}>
+        <h3 style="text-align: center;">Version 3.2.1</h3>
+        <Card forceColor={true}>
+            <ul>
+                <li>Improvements in the "Audio to video section"
+                    <ul>
+                        <li>It's now possible to embed the source album art of the audio file in the output video file</li>
+                        <li>Added support to custom tags for the MP4 output</li>
+                        <li>It's now possible to convert the audio file to a video even if it hasn't an album art</li>
+                        <li>Other bug fixes</li>
+                    </ul>
+                </li>
+                <li>Small layout improvements</li>
+            </ul>
+        </Card>
+    </Card><br>
+    <Card type={1} forceColor={true}>
         <h3 style="text-align: center;">Version 3.2.0</h3>
         <Card forceColor={true}>
             <ul>

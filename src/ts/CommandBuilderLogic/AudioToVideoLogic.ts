@@ -31,7 +31,7 @@ export default async function AudioToVideoLogic(pickedFiles: File[], handle?: Fi
     /**
     * Get if multiple timestamps must be added or not
     */
-    const multipleTimestamps = ConversionOptions.trimOptions.id === 2;
+    const multipleTimestamps = false;
     CreateTopDialog(`${getLang("Started operation")} ${obj.operationId}! ${getLang(`Change the Operation ID from the "Conversion Status" tab to see the current progress.`)}`, "OperationStarted");
     /**
      * An object that will contain as its key the name of the metadata property, and as its value the content of the metadata property
@@ -82,7 +82,12 @@ export default async function AudioToVideoLogic(pickedFiles: File[], handle?: Fi
         /**
          * The image that'll be used as a base for the metadata canvases. Initially it can be a String or an Uint8Array, but after the first canvas generation it'll always be a Blob.
          */
-        let imageResult = (await ffmpegOperation.start(["-i", FFmpegFileNameHandler(singleFile), `__FfmpegWebExclusive__img_${randomImageIdentifier}.png`], `__FfmpegWebExclusive__img_${randomImageIdentifier}.png`))[0].file as string | Uint8Array | Blob; // Extract the album art from the content
+        let imageResult :string | Uint8Array | Blob | undefined; // Extract the album art from the content
+        try {
+            imageResult = (await ffmpegOperation.start(["-i", FFmpegFileNameHandler(singleFile), "-map", "0:v", "-c", "copy", `__FfmpegWebExclusive__img_${randomImageIdentifier}.png`], `__FfmpegWebExclusive__img_${randomImageIdentifier}.png`))[0].file;
+        } catch (ex) { // If there's no album art, the extraction will fail.
+            console.warn(ex);
+        }
         ffmpegOperation.operationComplete();
         if (typeof imageResult === "string") { // FFmpeg native was used, so we need to read the content of the file
             const img = await obj.readFile(imageResult, true);
@@ -98,16 +103,18 @@ export default async function AudioToVideoLogic(pickedFiles: File[], handle?: Fi
             canvas.height = chosenImage?.height ?? 1000;
             if (chosenImage) { // We'll add now the custom image as a Blob
                 const ctx = canvas.getContext("2d");
-                ctx && ctx.drawImage(chosenImage, 0, 0, canvas.width, canvas.height);
+                ctx?.drawImage(chosenImage, 0, 0, canvas.width, canvas.height);
                 chosenConversionOptions.content.showImportedImage && metadataImages.push(await new Promise<Blob>((resolve) => {
                     canvas.toBlob((blob) => blob && resolve(blob));
                 }))
             }
+            let isImageResultUndefined = typeof imageResult === "undefined";
             imageResult = await new Promise((resolve) => { // We'll use this new canvas as a reference for the metadata. If a custom image has been provided, the canvas still has it drawn, so we'll use that. Otherwise, it'll be blank.
                 canvas.toBlob((blob) => {
                     blob && resolve(blob);
                 })
-            })
+            });
+            isImageResultUndefined && await obj.writeFile(new File([imageResult as BlobPart], `__FfmpegWebExclusive__img_${randomImageIdentifier}.png`), true);
         } else {
             imageResult = new Blob([imageResult as BlobPart]);
         }
@@ -115,6 +122,35 @@ export default async function AudioToVideoLogic(pickedFiles: File[], handle?: Fi
          * The URL of the image used as a base for metadata editing
          */
         let objectUrl = URL.createObjectURL(imageResult as Blob);
+        /**
+         * If the album art has been re-encoded. If false, the album art won't be added to the output file.
+         */
+        let isAlbumArtReEncoded = false;
+        // We'll now re-encode the extracted album art. This is unfortunately necessary since, if the album art mimetype embedded in the file is wrong, FFmpeg will refuse to do any kind of re-encoding with that image. So, we'll re-encode it in a true PNG. 
+        await new Promise<void>(res => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob(async (blob) => {
+                    if (blob) {
+                        await obj.removeFile(`__FfmpegWebExclusive__img_${randomImageIdentifier}.png`);
+                        chosenConversionOptions.scale === 1 && await obj.writeFile(new File([blob], `__FfmpegWebExclusive__img_${randomImageIdentifier}.png`), true); // If the conversion scale is different, the image will be re-encoded again later.
+                        if (imageResult) {
+                            await obj.writeFile(new File([blob], `__FfmpegWebExclusive__AlbumArt_${randomImageIdentifier}.png`), true);
+                            isAlbumArtReEncoded = true;
+                        }
+                        res();
+                    } else res()
+                }, "image/png");
+            }
+            img.onerror = () => {
+                res();
+            }
+            img.src = objectUrl;
+        });
         chosenConversionOptions.scale !== 1 && await new Promise<void>((resolve) => { // If the user wants to scale the image, we'll generate another canvas with the scaled width/height
             const img = new Image();
             img.onload = () => {
@@ -263,8 +299,7 @@ export default async function AudioToVideoLogic(pickedFiles: File[], handle?: Fi
                 videoFilterPosition === -1 ? hardwareAcceleration.after.push("-vf", "setpts=PTS-STARTPTS") : hardwareAcceleration.after[videoFilterPosition + 1] += ",setpts=PTS-STARTPTS";
                 hardwareAcceleration.after.push("-af", "asetpts=PTS-STARTPTS"); // Same for audio
             }
-            const start = await ffmpegOperation.start([...hardwareAcceleration.beginning, "-i", `__FfmpegWebExclusive__SecondOutput_${randomImageIdentifier}_.mp4`, "-i", FFmpegFileNameHandler(singleFile), "-map_metadata", "1", "-vcodec", outputVideoInfo, "-acodec", audioCodec, "-b:a", chosenConversionOptions.audioBitrate, "-map", "0:v:0", "-map", "1:a:0", "-b:v", chosenConversionOptions.videoBitrate, ...(outputVideoInfo !== "copy" ? hardwareAcceleration.after : []), ...(chosenConversionOptions.useInterleaveDelta ? ["-max_interleave_delta", "0"] : []), ...(chosenConversionOptions.useDuration ? ["-to", audioDuration] : []), `__FfmpegWebExclusive__ThirdOutput_${randomImageIdentifier}_.${chosenConversionOptions.extension}`]) // Start the ffmpeg process: finally, we'll add the audio and transcode it to the output codec. If the seconds method is being used, it'll be trimmed to the audio duration to avoid having a video longer than the audio.
-            console.log(start);
+            const start = await ffmpegOperation.start([...hardwareAcceleration.beginning, "-i", `__FfmpegWebExclusive__SecondOutput_${randomImageIdentifier}_.mp4`, "-i", FFmpegFileNameHandler(singleFile), ...(chosenConversionOptions.addAlbumArtToOutput && isAlbumArtReEncoded ? ["-i", `__FfmpegWebExclusive__AlbumArt_${randomImageIdentifier}.png`] : []),  "-map_metadata", "1", ...(chosenConversionOptions.addNonStandardMp4Tags && (chosenConversionOptions.extension.endsWith("mp4") || chosenConversionOptions.extension.endsWith("m4v")) ? ["-movflags", "+use_metadata_tags"] : []), "-vcodec", outputVideoInfo, "-acodec", audioCodec, "-b:a", chosenConversionOptions.audioBitrate, "-map", "0:v:0", "-map", "1:a:0", "-b:v", chosenConversionOptions.videoBitrate, ...(outputVideoInfo !== "copy" ? hardwareAcceleration.after : []), ...(chosenConversionOptions.useInterleaveDelta ? ["-max_interleave_delta", "0"] : []), ...(chosenConversionOptions.useDuration ? ["-to", audioDuration] : []), ...(chosenConversionOptions.addAlbumArtToOutput && isAlbumArtReEncoded ? ["-map", "2", "-c:v:1", "mjpeg", "-disposition:2", "attached_pic"] : []), `__FfmpegWebExclusive__ThirdOutput_${randomImageIdentifier}_.${chosenConversionOptions.extension}`]) // Start the ffmpeg process: finally, we'll add the audio and transcode it to the output codec. If the seconds method is being used, it'll be trimmed to the audio duration to avoid having a video longer than the audio.
             /**
              * If the output file is a Uint8Array, the result is from FFmpeg WebAssembly, and it'll be written using standard JavaScript APIs. Otherwise, it's a path for the native FFmpeg process, and it'll be moved using Node's FS API.
              */
@@ -274,19 +309,17 @@ export default async function AudioToVideoLogic(pickedFiles: File[], handle?: Fi
             break;
         }
         ffmpegOperation.operationComplete(); // Delete the downloaded items from the list
-        let hasFirstFileBeenDone = false; // The first file is the source file, and it is not in the virtual memory. All the other files, however, are
-        for (const file of [...metadataImages.map((item, i) => `__FfmpegWebExclusive__${i}_${randomImageIdentifier}.png`), `__FfmpegWebExclusive__img_${randomImageIdentifier}.png`, `__FfmpegWebExclusive__run${randomImageIdentifier}.txt`, `__FfmpegWebExclusive__FirstOutput_${randomImageIdentifier}.mp4`, ...(chosenConversionOptions.saveTemp ? [`__FfmpegWebExclusive__metadata_${randomImageIdentifier}.json`] : []), ...(chosenConversionOptions.content.showQuickInfo ? [`__FfmpegWebExclusive__MainImg_${randomImageIdentifier}.png`] : [])]) { // Most of the files that need to be deleted. If the user wants to save temporary files, they'll be downloaded.
+        for (const file of [...metadataImages.map((item, i) => `__FfmpegWebExclusive__${i}_${randomImageIdentifier}.png`), `__FfmpegWebExclusive__img_${randomImageIdentifier}.png`, `__FfmpegWebExclusive__run${randomImageIdentifier}.txt`, `__FfmpegWebExclusive__FirstOutput_${randomImageIdentifier}.mp4`, ...(chosenConversionOptions.saveTemp ? [`__FfmpegWebExclusive__metadata_${randomImageIdentifier}.json`] : []), ...(chosenConversionOptions.content.showQuickInfo ? [`__FfmpegWebExclusive__MainImg_${randomImageIdentifier}.png`] : []), ...(isAlbumArtReEncoded ? [`__FfmpegWebExclusive__AlbumArt_${randomImageIdentifier}.png`] : [])]) { // Most of the files that need to be deleted. If the user wants to save temporary files, they'll be downloaded.
             if (chosenConversionOptions.saveTemp && FFmpegFileNameHandler(singleFile) !== file && file !== `__FfmpegWebExclusive__run${randomImageIdentifier}.txt`) {
                 const tempFile = await obj.readFile(file);
                 const title = `[${fileSave.sanitize(singleFile.name)}] ${file.replace("__FfmpegWebExclusive__", "").replace(`_${randomImageIdentifier}`, "")}`;
                 tempFile ? await fileSave.write(tempFile, title) : await fileSave.native(file, title, singleFile.path);
             }
-            await obj.removeFile(file, hasFirstFileBeenDone); // And remove the source files from the FS.
-            hasFirstFileBeenDone = true
+            await obj.removeFile(file, true); // And remove the source files from the FS.
         }
         await obj.removeFile(FFmpegFileNameHandler(singleFile));
         await obj.removeFile(`__FfmpegWebExclusive__SecondOutput_${randomImageIdentifier}_.mp4`, true); // Remove the looped video
-        await obj.removeFile(`__FfmpegWebExclusive__ThirdOutput_${randomImageIdentifier}_.${chosenConversionOptions.extension}`); // Remove the final video
+        await obj.removeFile(`__FfmpegWebExclusive__ThirdOutput_${randomImageIdentifier}_.${chosenConversionOptions.extension}`, true); // Remove the final video
         Settings.exit.afterFile && obj.exit(); // Exit from FFmpeg
         /**
          * Restore the metadata objects so that they can be used for the next conversion.
