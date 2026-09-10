@@ -1,15 +1,34 @@
 <script>
-    import { updateDialogShown } from "../ts/Writables";
+    import Writables from "../ts/Writables.svelte";
     import AdaptiveAsset from "./UIElements/AdaptiveAsset.svelte";
     import Card from "./UIElements/Card/Card.svelte";
     import Dialog from "./UIElements/Dialog.svelte";
 </script>
 
-<Dialog closeFunction={() => updateDialogShown.set(false)} closeAtTop={true}>
+<Dialog closeFunction={() => (Writables.updateDialogShown = false)} closeAtTop={true}>
     <h2>What's new in ffmpeg-web</h2>
     <div class="flex hcenter wcenter">
         <AdaptiveAsset asset="icon" width={128}></AdaptiveAsset>
     </div>
+        <Card type={1} forceColor={true}>
+        <h3 style="text-align: center;">Version 3.3.0</h3>
+        <Card forceColor={true}>
+            <ul>
+                <li>You can now specify the frame to extract in the "Convert image" section</li>
+                <li>You can now get an estimate time about the ongoing conversion</li>
+                <li>ffmpeg-web now asks confirmation if the user tries to close the webpage while a conversion is running</li>
+                <li>ffmpeg-web can now share information about the conversion operations to a server you own, so that you can track the conversion progress on other devices.
+                    <ul>
+                        <li>You'll need to self-host this server and specify the URL from the Settings</li>
+                        <li>You can download the Python script <a href="./progress-server.py" target="_blank" download="progress-server.py">from here</a>, or from the Settings.</li>
+                    </ul>
+                </li>
+                <li>The webpage title is now updated when the user changes the shown operation from the "Current conversion" tab</li>
+                <li>Migrated the codebase to Svelte 5 + updated dependencies</li>
+                <li>Other bug fixes</li>
+            </ul>
+        </Card>
+    </Card><br>
     <Card type={1} forceColor={true}>
         <h3 style="text-align: center;">Version 3.2.1</h3>
         <Card forceColor={true}>
