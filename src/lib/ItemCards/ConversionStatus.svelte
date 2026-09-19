@@ -7,6 +7,7 @@
     import AdaptiveAsset from "../UIElements/AdaptiveAsset.svelte";
     import type { FFmpegEvent, FfmpegEventDetails } from "../../interfaces/ffmpeg";
     import ConsoleEvents from "../../ts/FFmpegUtils/ConsoleEvents";
+    import updateEta from "../../ts/CalculateEta";
     /**
      * The progress bar
      */
@@ -40,7 +41,7 @@
 
         setInterval(() => {
             if (!startedOnParagraph) return;
-            startedOnParagraph.textContent = `${getLang("Started at")}: ${new Date(Writables.conversionFileDone.startDate[selectedOption]).toLocaleTimeString()} – ${getLang("Estimated time")}: ${new Date((Date.now() - Writables.conversionFileDone.startDate[selectedOption]) / progress.value).toLocaleTimeString(undefined, {timeZone: "UTC"})}`;
+            startedOnParagraph.textContent = `${getLang("Started at")}: ${new Date(Writables.conversionFileDone.startDate[selectedOption]).toLocaleTimeString()} – ${getLang("Estimated time")}: ${updateEta(progress.value, Writables.conversionFileDone.startDate[selectedOption]) ?? getLang("loading")}`;
         }, 500);
     });
 

@@ -10,6 +10,7 @@
     import { getLang } from "../ts/LanguageAdapt";
     import type { FFmpegEvent, FfmpegEventDetails } from "../interfaces/ffmpeg";
     import ConsoleEvents from "../ts/FFmpegUtils/ConsoleEvents";
+    import updateEta from "../ts/CalculateEta";
     /**
      * The div where the Screensaver will be contained
      */
@@ -46,7 +47,7 @@
         Settings.screenSaver.options.fullscreen && FullscreenManager.apply(backgroundContainer);
         const etaInterval = setInterval(() => {
             if (!startedOnParagraph) return;
-            startedOnParagraph.textContent = `${getLang("Started at")}: ${new Date(Writables.conversionFileDone.startDate[currentConversion]).toLocaleTimeString()} – ${getLang("Estimated time")}: ${new Date((Date.now() - Writables.conversionFileDone.startDate[currentConversion]) / progress.value).toLocaleTimeString(undefined, {timeZone: "UTC"})}`;
+            startedOnParagraph.textContent = `${getLang("Started at")}: ${new Date(Writables.conversionFileDone.startDate[currentConversion]).toLocaleTimeString()} – ${getLang("Estimated time")}: ${updateEta(progress.value, Writables.conversionFileDone.startDate[currentConversion]) ?? getLang("loading")}`;
         }, 500);
         return () => {
             // Remove the event listener to avoid unnecessary calls (and errors)

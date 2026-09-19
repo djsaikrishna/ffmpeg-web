@@ -302,11 +302,12 @@ let translations = new Map<string, TranslationRequirements>([
     ["Extract this frame", {it: "Estrai questo frame"}],
     ["Frame extraction:", {it: "Estrazione dei frame:"}],
     ["Extract only one frame", {it: "Estrai solo un frame"}],
-    ["Started at", {it: "Iniziato alle:"}],
+    ["Started at", {it: "Iniziato alle"}],
     ["Estimated time", {it: "Tempo previsto"}],
     ["Show the estimate time", {it: "Mostra il tempo previsto"}],
     ["Use this directory also for the future operations", {it: "Utilizza questa cartella anche per le operazioni future"}],
-    ["Please pick from the \"File selection\" tab the folder where the converted files should be saved, then drag and drop the files again", {it: "Selezionare dalla sezione \"Selezione dei file\" la cartella dove i file dovrebbero essere salvati, e poi rilasciare i file di nuovo"}]
+    ["Please pick from the \"File selection\" tab the folder where the converted files should be saved, then drag and drop the files again", {it: "Selezionare dalla sezione \"Selezione dei file\" la cartella dove i file dovrebbero essere salvati, e poi rilasciare i file di nuovo"}],
+    ["loading", {it: "carico"}]
 ])
 /**
  * Translate a string
